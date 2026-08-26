@@ -13,7 +13,7 @@ médiathèque WordPress de `dr-bergeon.fr`.
 | `out/preview-*.html` | aperçus ouvrables au navigateur (images locales) |
 | `out/logo-signature.gif` | bloc-marque animé ré-encodé, 412×297 px (affiché 200×144), 92 Ko |
 | `out/logo-signature.png` | même image figée, pour une signature sans animation |
-| `out/facebook.png` | icône Facebook, dessinée pour compléter le jeu existant |
+| `out/facebook.png` | icône Facebook, ajoutée pour compléter le jeu existant |
 | `build-logo.js`, `build-icon-facebook.js`, `build-signature.js` | scripts de regénération |
 
 ## Ce que contient la signature
@@ -56,6 +56,26 @@ Ne plus déplacer ni renommer ces fichiers ensuite : les mails déjà envoyés p
 > message d'un correspondant. Le texte, les liens et le bouton Doctolib restent
 > lisibles ; le bloc-marque et les pictogrammes attendent un clic sur « afficher les
 > images ». C'est le comportement de toute signature illustrée.
+
+## L'icône Facebook
+
+Le jeu en ligne n'en comportait pas. `build-icon-facebook.js` la produit au gabarit
+exact des autres, relevé sur `instagam.png` : toile 1250 px, trait 74 px, rayon de coin
+240 px, or `rgb(188,164,135)`.
+
+Le « f » n'est pas une lettre redessinée : c'est le tracé vectoriel officiel de la
+marque, aplati puis rempli. Il est **plein**, comme la marque elle-même — un « f » en
+trait fin, aligné sur l'épaisseur des autres pictogrammes, ne ressemble pas à Facebook.
+
+Deux réglages par variables d'environnement :
+
+```bash
+FB_CADRE=cercle node build-icon-facebook.js   # cadre rond au lieu du carré arrondi
+FB_H=540 node build-icon-facebook.js          # « f » plus ou moins grand dans le cadre
+```
+
+Le carré arrondi est retenu par défaut : il reprend le cadre de l'icône Instagram
+existante et correspond à l'icône d'application Facebook.
 
 ## Le bloc-marque animé
 

@@ -1,6 +1,10 @@
 // Dessine l'icône Facebook manquante, calée sur le jeu d'icônes déjà en ligne
 // (mesures relevées sur instagam.png : toile 1250 px, trait 74 px, rayon de coin 240 px,
 // or rgb(188,164,135), tracé jointif au bord de la toile).
+//
+// Le « f » n'est pas une lettre redessinée : c'est le tracé officiel de la marque
+// Facebook, repris tel quel puis mis à l'échelle. Il est plein — c'est ainsi que la
+// marque existe ; un « f » en trait fin ne ressemble pas à Facebook.
 const fs = require('fs');
 const path = require('path');
 const { PNG } = require('pngjs');
@@ -8,101 +12,131 @@ const { PNG } = require('pngjs');
 const OUT = path.join(__dirname, 'out');
 fs.mkdirSync(OUT, { recursive: true });
 
-const N = 1250;      // toile, identique à instagam.png
-const SS = 3;        // supersampling
-const W = 74;        // épaisseur de trait du jeu existant
-const R_OUT = 240;   // rayon de coin extérieur du carré arrondi
+const N = 1250;          // toile, identique à instagam.png
+const SS = 3;            // supersampling
+const TRAIT = 74;        // épaisseur de trait du jeu existant
+const R_COIN = 240;      // rayon de coin extérieur du carré arrondi
 const OR = [188, 164, 135];
+
+const GLYPHE_H = Number(process.env.FB_H) || 580;  // hauteur du « f » sur la toile
+const CADRE = process.env.FB_CADRE || 'carre';     // 'carre' | 'cercle' | 'aucun'
+
+// --- tracé officiel de la marque, dans sa boîte d'origine 24x24 (x de 6.187 à 18.188)
+const PATH = [
+  ['M', 15.997, 3.985],
+  ['L', 18.188, 3.985],
+  ['L', 18.188, 0.169],
+  ['C', 17.810, 0.117, 16.510, 0, 14.996, 0],
+  ['C', 11.837, 0, 9.673, 1.987, 9.673, 5.639],
+  ['L', 9.673, 9],
+  ['L', 6.187, 9],
+  ['L', 6.187, 13.266],
+  ['L', 9.673, 13.266],
+  ['L', 9.673, 24],
+  ['L', 13.947, 24],
+  ['L', 13.947, 13.267],
+  ['L', 17.292, 13.267],
+  ['L', 17.823, 9.001],
+  ['L', 13.946, 9.001],
+  ['L', 13.946, 6.062],
+  ['C', 13.947, 4.829, 14.279, 3.985, 15.997, 3.985],
+];
+const BOITE = { x0: 6.187, y0: 0, x1: 18.188, y1: 24 };
+
+// --- aplatissement des courbes en polygone
+function polygone(scale, dx, dy, pas = 24) {
+  const pts = [];
+  const T = (x, y) => [dx + (x - BOITE.x0) * scale, dy + (y - BOITE.y0) * scale];
+  let cur = null;
+  for (const c of PATH) {
+    if (c[0] === 'M' || c[0] === 'L') {
+      cur = [c[1], c[2]];
+      pts.push(T(cur[0], cur[1]));
+    } else {
+      const [, c1x, c1y, c2x, c2y, ex, ey] = c;
+      const [sx, sy] = cur;
+      for (let i = 1; i <= pas; i++) {
+        const t = i / pas, u = 1 - t;
+        const x = u * u * u * sx + 3 * u * u * t * c1x + 3 * u * t * t * c2x + t * t * t * ex;
+        const y = u * u * u * sy + 3 * u * u * t * c1y + 3 * u * t * t * c2y + t * t * t * ey;
+        pts.push(T(x, y));
+      }
+      cur = [ex, ey];
+    }
+  }
+  return pts;
+}
+
+// --- remplissage par balayage de lignes (pair-impair : contour unique)
+function remplir(mask, W, H, pts) {
+  let ymin = Infinity, ymax = -Infinity;
+  for (const [, y] of pts) { if (y < ymin) ymin = y; if (y > ymax) ymax = y; }
+  const y0 = Math.max(0, Math.floor(ymin)), y1 = Math.min(H - 1, Math.ceil(ymax));
+  const xs = [];
+  for (let py = y0; py <= y1; py++) {
+    const yc = py + 0.5;
+    xs.length = 0;
+    for (let i = 0, n = pts.length; i < n; i++) {
+      const [ax, ay] = pts[i], [bx, by] = pts[(i + 1) % n];
+      if ((ay <= yc && by > yc) || (by <= yc && ay > yc)) {
+        xs.push(ax + ((yc - ay) / (by - ay)) * (bx - ax));
+      }
+    }
+    xs.sort((a, b) => a - b);
+    for (let k = 0; k + 1 < xs.length; k += 2) {
+      const a = Math.max(0, Math.ceil(xs[k] - 0.5)), b = Math.min(W - 1, Math.floor(xs[k + 1] - 0.5));
+      for (let px = a; px <= b; px++) mask[py * W + px] = 1;
+    }
+  }
+}
 
 // --- distance signée à un rectangle arrondi (repère centré)
 function sdRoundRect(x, y, hw, hh, r) {
-  const qx = Math.abs(x) - (hw - r);
-  const qy = Math.abs(y) - (hh - r);
+  const qx = Math.abs(x) - (hw - r), qy = Math.abs(y) - (hh - r);
   const ax = Math.max(qx, 0), ay = Math.max(qy, 0);
   return Math.hypot(ax, ay) + Math.min(Math.max(qx, qy), 0) - r;
 }
 
-// --- carré arrondi en contour, épaisseur W, bord extérieur collé à la toile
-const HW = N / 2;
-const rMid = R_OUT - W / 2;
-const cadre = (x, y) => Math.abs(sdRoundRect(x - HW, y - HW, HW - W / 2, HW - W / 2, rMid)) <= W / 2;
+function generer(fichier) {
+  const W3 = N * SS;
+  const mask = new Uint8Array(W3 * W3);
 
-// --- le « f », tracé d'épaisseur constante W : hampe + crochet tangents au même point
-const F_X = 600;        // axe de la hampe
-const F_JOIN = 470;     // raccord hampe / crochet
-const F_R = 170;        // rayon de la ligne médiane du crochet
-const F_BOTTOM = 960;
-const F_BAR_Y = 600, F_BAR_X0 = 420, F_BAR_X1 = 790;
+  // le glyphe, à l'échelle demandée et centré
+  const scale = (GLYPHE_H / (BOITE.y1 - BOITE.y0)) * SS;
+  const gw = (BOITE.x1 - BOITE.x0) * scale, gh = (BOITE.y1 - BOITE.y0) * scale;
+  remplir(mask, W3, W3, polygone(scale, (W3 - gw) / 2, (W3 - gh) / 2));
 
-function segment(x, y, ax, ay, bx, by) {
-  const dx = bx - ax, dy = by - ay;
-  const t = Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy)));
-  return Math.hypot(x - (ax + t * dx), y - (ay + t * dy)) <= W / 2;
-}
-
-function crochet(x, y) {
-  const dx = x - (F_X + F_R), dy = y - F_JOIN;
-  const d = Math.hypot(dx, dy);
-  if (Math.abs(d - F_R) > W / 2) return false;
-  return dx <= 0 && dy <= 0; // quart supérieur gauche : du raccord vers le haut
-}
-
-const glyphe = (x, y) =>
-  segment(x, y, F_X, F_JOIN, F_X, F_BOTTOM) ||
-  crochet(x, y) ||
-  segment(x, y, F_BAR_X0, F_BAR_Y, F_BAR_X1, F_BAR_Y);
-
-const forme = (x, y) => cadre(x, y) || glyphe(x, y);
-
-const png = new PNG({ width: N, height: N });
-for (let py = 0; py < N; py++) {
-  for (let px = 0; px < N; px++) {
-    let hits = 0;
-    for (let sy = 0; sy < SS; sy++) {
-      for (let sx = 0; sx < SS; sx++) {
-        if (forme(px + (sx + 0.5) / SS, py + (sy + 0.5) / SS)) hits++;
+  // le cadre
+  if (CADRE !== 'aucun') {
+    const HW = N / 2, rMid = R_COIN - TRAIT / 2, demi = TRAIT / 2;
+    for (let py = 0; py < W3; py++) {
+      const y = (py + 0.5) / SS - HW;
+      for (let px = 0; px < W3; px++) {
+        const x = (px + 0.5) / SS - HW;
+        const d = CADRE === 'cercle'
+          ? Math.abs(Math.hypot(x, y) - (HW - demi))
+          : Math.abs(sdRoundRect(x, y, HW - demi, HW - demi, rMid));
+        if (d <= demi) mask[py * W3 + px] = 1;
       }
     }
-    const i = (py * N + px) * 4;
-    png.data[i] = OR[0];
-    png.data[i + 1] = OR[1];
-    png.data[i + 2] = OR[2];
-    png.data[i + 3] = Math.round((hits / (SS * SS)) * 255);
   }
-}
-fs.writeFileSync(path.join(OUT, 'facebook.png'), PNG.sync.write(png));
 
-// --- planche de contrôle : le nouveau Facebook à côté des icônes existantes
-const set = ['wp/instagam.png', 'out/facebook.png', 'wp/telephone.png', 'wp/mail.png'];
-const S = 120;
-const sheet = new PNG({ width: S * set.length, height: S });
-for (let i = 0; i < sheet.data.length; i += 4) {
-  sheet.data[i] = sheet.data[i + 1] = sheet.data[i + 2] = 255;
-  sheet.data[i + 3] = 255;
-}
-set.forEach((f, k) => {
-  const p = PNG.sync.read(fs.readFileSync(path.join(__dirname, f)));
-  const sc = Math.min(S / p.width, S / p.height) * 0.86;
-  const ow = Math.round(p.width * sc), oh = Math.round(p.height * sc);
-  const ox = k * S + Math.round((S - ow) / 2), oy = Math.round((S - oh) / 2);
-  for (let y = 0; y < oh; y++) {
-    for (let x = 0; x < ow; x++) {
-      // moyenne de boîte pour un rendu propre à petite taille
-      const sx0 = Math.floor(x / sc), sx1 = Math.min(p.width, Math.ceil((x + 1) / sc));
-      const sy0 = Math.floor(y / sc), sy1 = Math.min(p.height, Math.ceil((y + 1) / sc));
-      let r = 0, g = 0, b = 0, a = 0, n = 0;
-      for (let yy = sy0; yy < sy1; yy++) for (let xx = sx0; xx < sx1; xx++) {
-        const si = (yy * p.width + xx) * 4;
-        const al = p.data[si + 3] / 255;
-        r += p.data[si] * al; g += p.data[si + 1] * al; b += p.data[si + 2] * al; a += al; n++;
+  // sous-échantillonnage SSxSS -> couverture
+  const png = new PNG({ width: N, height: N });
+  for (let y = 0; y < N; y++) {
+    for (let x = 0; x < N; x++) {
+      let hits = 0;
+      for (let sy = 0; sy < SS; sy++) {
+        const row = (y * SS + sy) * W3 + x * SS;
+        for (let sx = 0; sx < SS; sx++) hits += mask[row + sx];
       }
-      const di = ((oy + y) * sheet.width + (ox + x)) * 4;
-      const av = a / n;
-      sheet.data[di] = Math.round(255 + (r / n / (av || 1) - 255) * av);
-      sheet.data[di + 1] = Math.round(255 + (g / n / (av || 1) - 255) * av);
-      sheet.data[di + 2] = Math.round(255 + (b / n / (av || 1) - 255) * av);
+      const i = (y * N + x) * 4;
+      png.data[i] = OR[0]; png.data[i + 1] = OR[1]; png.data[i + 2] = OR[2];
+      png.data[i + 3] = Math.round((hits / (SS * SS)) * 255);
     }
   }
-});
-fs.writeFileSync(path.join(OUT, '_apercu-facebook.png'), PNG.sync.write(sheet));
-console.log('facebook.png généré');
+  fs.writeFileSync(path.join(OUT, fichier), PNG.sync.write(png));
+}
+
+generer(process.env.FB_OUT || 'facebook.png');
+console.log(`${process.env.FB_OUT || 'facebook.png'} — cadre « ${CADRE} », glyphe ${GLYPHE_H} px`);
