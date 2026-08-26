@@ -7,7 +7,7 @@ const { PNG } = require('pngjs');
 const OUT = path.join(__dirname, 'out');
 fs.mkdirSync(OUT, { recursive: true });
 
-const SIZE = 64;   // rendu 2x, affiché à 32px (réseaux) / 18px (contact)
+const SIZE = Number(process.env.ICON_SIZE) || 64; // rendu 2x, affiché à 22px
 const SS = 4;      // supersampling
 const VERT = [0x1c, 0x32, 0x27];
 const OR = [0xbd, 0xa5, 0x88];
@@ -74,11 +74,20 @@ const instagram = any(
   disc(0.705, 0.295, 0.055)
 );
 
-// --- Facebook : le « f » (hampe + crochet + barre)
+// --- Facebook : le « f », tracé d'épaisseur constante autour d'une ligne médiane.
+// La hampe et le crochet partagent le même point de raccord (0.5, HOOK_Y) et la même
+// tangente (verticale) : sans cela le raccord laisse une encoche.
+const FB_W = 0.158;        // épaisseur du trait
+const FB_X = 0.50;         // axe de la hampe
+const FB_HOOK_Y = 0.335;   // hauteur du raccord hampe / crochet
+const FB_HOOK_R = 0.195;   // rayon de la ligne médiane du crochet
 const facebook = any(
-  rect(0.435, 0.30, 0.60, 0.95),
-  arc(0.735, 0.34, 0.255, 0.165, Math.PI, Math.PI * 1.5),
-  rect(0.285, 0.455, 0.685, 0.585)
+  // hampe
+  rect(FB_X - FB_W / 2, FB_HOOK_Y, FB_X + FB_W / 2, 0.95),
+  // crochet : quart de couronne, du raccord (angle pi) vers le haut (angle 3pi/2)
+  arc(FB_X + FB_HOOK_R, FB_HOOK_Y, FB_HOOK_R, FB_W, Math.PI, Math.PI * 1.5),
+  // barre
+  rect(0.27, 0.455, 0.73, 0.455 + FB_W * 0.83)
 );
 
 // --- Téléphone : combiné stylisé (deux embouts + arche)
