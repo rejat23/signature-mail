@@ -163,11 +163,31 @@ Rappel : celui-ci affichera le logo figé sur sa première image.
 *Paramètres du compte → Utiliser HTML* → cocher « Joindre la signature depuis un
 fichier » et pointer sur `signature-contact.html`.
 
+## Plusieurs postes
+
+Les **signatures itinérantes** de Microsoft rangent la signature dans la boîte aux
+lettres, d'où elle suit l'utilisateur de poste en poste. Elles sont réservées aux boîtes
+**Exchange Online / Outlook.com** : un compte IMAP tiers, donc Infomaniak, en est exclu,
+et l'abonnement Microsoft 365 n'y change rien — c'est la boîte qui décide, pas la licence.
+
+Il faut donc installer la signature **sur chaque poste**. Selon la version :
+
+- **Nouvel Outlook** : refaire le copier-coller depuis `signature-contact.html`. Ouvrir
+  le fichier depuis un emplacement commun (le partage du NAS) pour que les postes
+  partent tous de la même source.
+- **Outlook classique** : pas de ressaisie. Copier les fichiers de
+  `out/signatures-outlook-classique/` dans `%APPDATA%\Microsoft\Signatures`, Outlook
+  fermé, puis affecter la signature au compte dans *Fichier → Options → Courrier →
+  Signatures*. Le rendu est alors rigoureusement identique d'un poste à l'autre.
+
+Ces fichiers sont produits par `build-outlook-classique.js` : un `.htm` pour les
+messages HTML, un `.txt` pour ceux en texte brut.
+
 ## Regénérer
 
 ```bash
 npm install
-node build-logo.js && node build-icon-facebook.js && node build-signature.js
+node build-logo.js && node build-icon-facebook.js && node build-signature.js && node build-outlook-classique.js
 ```
 
 Sources : `assets/logo-anime-source.gif` (copie de `Gif.gif` de la médiathèque),

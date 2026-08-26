@@ -1,0 +1,14 @@
+﻿Signatures pour l'Outlook CLASSIQUE (Win32) uniquement.
+
+Copier les fichiers .htm et .txt de ce dossier dans :
+    %APPDATA%\Microsoft\Signatures
+sur chaque poste (coller ce chemin dans la barre d'adresse de l'Explorateur).
+
+Puis dans Outlook : Fichier > Options > Courrier > Signatures,
+et affecter la signature au compte, pour les nouveaux messages
+et pour les réponses/transferts.
+
+Outlook doit être fermé pendant la copie.
+
+Le NOUVEL Outlook ne lit pas ce dossier : il faut y refaire le
+copier-coller depuis signature-contact.html ouvert au navigateur.
