@@ -88,9 +88,10 @@ d'apparition seule ramenée à 25 i/s, encodage différentiel. **1,5 Mo → 92 K
 
 Deux partis pris, modifiables en tête du script :
 
-- **La première image est le logo terminé.** Outlook pour Windows n'affiche que la
-  première image d'un GIF : il montrera donc le logo correct au lieu d'une case vide.
-  Elle dure 20 ms, invisible partout ailleurs.
+- **La première image est le logo terminé.** L'**Outlook classique** (Win32, moteur de
+  rendu de Word) n'affiche que la première image d'un GIF : il montrera donc le logo
+  correct au lieu d'une case vide. Elle dure 20 ms, invisible partout ailleurs.
+  Le **nouvel Outlook**, lui, est bâti sur Chromium et anime normalement le GIF.
 - **Lecture unique** (`LOOP = -1`), l'animation se joue une fois et la signature reste
   au repos sur le logo terminé. Mettre `LOOP = 0` pour une boucle infinie.
 
@@ -123,10 +124,39 @@ iOS ne gère pas le HTML dans les signatures. Ouvrir la signature dans Safari,
 tout sélectionner, copier, puis coller dans *Réglages → Applications → Mail → Signature*.
 Le rendu est simplifié (le bouton Doctolib devient un lien), mais les liens fonctionnent.
 
-### Outlook (Windows)
+### Outlook (nouveau) — Windows 11
 
-*Fichier → Options → Courrier → Signatures*. Comme pour le webmail, passer par un
-copier-coller depuis le navigateur. Rappel : Outlook affichera le logo fixe.
+Le nouvel Outlook est bâti sur Chromium : il **anime le GIF** et rend correctement le
+tableau. Son éditeur de signature n'accepte pas le HTML brut, il faut coller du contenu
+déjà rendu.
+
+1. Ouvrir `out/signature-contact.html` dans le navigateur (double-clic). Le fichier est
+   autonome, ses images sont en ligne.
+2. `Ctrl+A` puis `Ctrl+C` — la page ne contient que la signature, la sélection est propre.
+3. Dans Outlook, engrenage **Paramètres** (en haut à droite) → **Comptes** →
+   **Signatures**. Sur les versions plus anciennes : **Courrier** → **Rédaction et
+   réponse** → **Signature électronique**.
+4. **Nouvelle signature**, la nommer, puis coller avec **`Ctrl+V`**.
+   Surtout pas `Ctrl+Maj+V`, qui colle en texte brut et détruit la mise en forme.
+5. Choisir la signature pour les **nouveaux messages** et pour les **réponses/transferts**.
+6. **Enregistrer**.
+
+Deux comptes, deux signatures : le sélecteur de compte est en haut de la page
+*Signatures*. Refaire l'opération avec `signature-secretariat.html` sur `secretariat@`.
+
+Après le collage, vérifier trois points que l'éditeur peut simplifier : le filet
+vertical en pointillé, le fond vert du bouton *Prendre rendez-vous*, et la présence du
+bloc-marque. Si le logo manque, refaire le copier-coller — ne pas l'insérer avec le
+bouton « image », qui téléverse une copie locale et la joint à chaque message.
+
+> Le nouvel Outlook fait transiter les comptes tiers (IMAP, donc Infomaniak) par les
+> serveurs de Microsoft pour les synchroniser. Point à peser pour une boîte
+> professionnelle de santé ; sans rapport avec la signature, mais autant le savoir.
+
+### Outlook classique (Windows)
+
+*Fichier → Options → Courrier → Signatures*, même copier-coller depuis le navigateur.
+Rappel : celui-ci affichera le logo figé sur sa première image.
 
 ### Thunderbird
 
