@@ -29,10 +29,17 @@ const TEL_HREF = 'tel:+33970750710';
 const SITE = 'https://www.dr-bergeon.fr';
 const DOCTOLIB = 'https://www.doctolib.fr/angiologue/gueret/nicolas-bergeon';
 const INSTAGRAM = 'https://www.instagram.com/drbergeon/';
-const FACEBOOK = 'https://www.facebook.com/profile.php?id=100084380033524';
+const FACEBOOK = 'https://www.facebook.com/people/Dr-Nicolas-Bergeon/100084380033524/'; // URL canonique : profile.php?id=... n'est qu'une redirection
 
+// Google Maps sous sa forme « chemin », sans chaîne de requête : un lien de la forme
+// ?api=1&query=... perd son adresse dès qu'un client mail assainit le HTML autour du
+// « & », et n'ouvre plus qu'une carte vide.
 const maps = (adresse) =>
-  'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(adresse);
+  'https://www.google.com/maps/search/' +
+  encodeURIComponent(adresse).replace(/%20/g, '+').replace(/%2C/g, ',');
+
+// Toute URL posée dans un attribut HTML : le « & » doit y être une entité.
+const href = (u) => u.replace(/&/g, '&amp;');
 
 const PROFILS = {
   contact: {
@@ -50,9 +57,9 @@ const PROFILS = {
 };
 
 function signature(p, local) {
-  const url = (f) => (local ? `./${f}` : `${NOUVEAUX.has(f) ? BASE_NOUVEAU : BASE_ICONES}/${f}`);
-  const lien = (href, texte, extra = '') =>
-    `<a href="${href}" style="color:${TEXTE};text-decoration:none;${extra}">${texte}</a>`;
+  const url = (f) => href(local ? `./${f}` : `${NOUVEAUX.has(f) ? BASE_NOUVEAU : BASE_ICONES}/${f}`);
+  const lien = (u, texte, extra = '') =>
+    `<a href="${href(u)}" style="color:${TEXTE};text-decoration:none;${extra}">${texte}</a>`;
 
   // pictogramme + texte, sur une largeur de colonne fixe pour que le texte s'aligne
   const ligne = (icone, w, h, alt, contenu) => `
@@ -73,7 +80,7 @@ function signature(p, local) {
   return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" width="545" style="border-collapse:collapse;background:#ffffff;width:545px;">
   <tr>
     <td width="${LOGO_W}" style="padding:0 16px 0 0;vertical-align:top;">
-      <a href="${SITE}" style="text-decoration:none;border:0;">
+      <a href="${href(SITE)}" style="text-decoration:none;border:0;">
         <img src="${url('logo-signature.gif')}" width="${LOGO_W}" height="${LOGO_H}" alt="Dr Nicolas Bergeon &ndash; M&eacute;decine vasculaire et esth&eacute;tique" style="display:block;border:0;outline:none;" />
       </a>
     </td>
@@ -98,17 +105,17 @@ function signature(p, local) {
       <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;margin-top:14px;">
         <tr>
           <td style="background:${VERT};border-radius:3px;">
-            <a href="${DOCTOLIB}" style="display:inline-block;padding:9px 15px;font-family:${SANS};font-size:11px;font-weight:bold;letter-spacing:1.2px;text-transform:uppercase;color:#ffffff;text-decoration:none;">
+            <a href="${href(DOCTOLIB)}" style="display:inline-block;padding:9px 15px;font-family:${SANS};font-size:11px;font-weight:bold;letter-spacing:1.2px;text-transform:uppercase;color:#ffffff;text-decoration:none;">
               Prendre rendez-vous
             </a>
           </td>
           <td style="padding-left:14px;vertical-align:middle;">
-            <a href="${INSTAGRAM}" style="text-decoration:none;border:0;">
+            <a href="${href(INSTAGRAM)}" style="text-decoration:none;border:0;">
               <img src="${url('instagam.png')}" width="22" height="22" alt="Instagram" style="display:block;border:0;" />
             </a>
           </td>
           <td style="padding-left:9px;vertical-align:middle;">
-            <a href="${FACEBOOK}" style="text-decoration:none;border:0;">
+            <a href="${href(FACEBOOK)}" style="text-decoration:none;border:0;">
               <img src="${url('facebook.png')}" width="22" height="22" alt="Facebook" style="display:block;border:0;" />
             </a>
           </td>
