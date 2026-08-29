@@ -10,16 +10,11 @@ const path = require('path');
 const OUT = path.join(__dirname, 'out', 'signatures-outlook-classique');
 fs.mkdirSync(OUT, { recursive: true });
 
-const PROFILS = [
-  { src: 'signature-contact.html', nom: 'Dr Bergeon', qui: 'Docteur Nicolas Bergeon', email: 'contact@dr-bergeon.fr' },
-  { src: 'signature-secretariat.html', nom: 'Secretariat Dr Bergeon', qui: 'Secrétariat médical — Cabinet du Dr Nicolas Bergeon', email: 'secretariat@dr-bergeon.fr' },
-];
-
-const texte = (p) => [
-  p.qui,
+const cabinet = (qui, email) => [
+  qui,
   '',
   'Tél. 09 70 75 07 10',
-  p.email,
+  email,
   '57 avenue du Berry - 23000 Guéret',
   '8 rue Ambroise Croizat - 03630 Désertines',
   'www.dr-bergeon.fr',
@@ -31,7 +26,29 @@ const texte = (p) => [
   'Cabinet ouvert du lundi au vendredi, 8h00 - 19h00.',
   "Ce message et ses pièces jointes sont confidentiels. Si vous n'en êtes pas le",
   'destinataire, merci de nous en informer et de le supprimer.',
-].join('\r\n') + '\r\n';
+];
+
+const PROFILS = [
+  {
+    src: 'signature-contact.html', nom: 'Dr Bergeon',
+    texte: cabinet('Docteur Nicolas Bergeon', 'contact@dr-bergeon.fr'),
+  },
+  {
+    src: 'signature-secretariat.html', nom: 'Secretariat Dr Bergeon',
+    texte: cabinet('Secrétariat médical — Cabinet du Dr Nicolas Bergeon', 'secretariat@dr-bergeon.fr'),
+  },
+  {
+    src: 'signature-personnelle.html', nom: 'Carina et Nicolas',
+    texte: [
+      'Carina Passant & Nicolas Bergeon',
+      '',
+      '22 rue du Pradet - 23000 Guéret',
+      '06 95 15 86 96',
+    ],
+  },
+];
+
+const texte = (p) => p.texte.join('\r\n') + '\r\n';
 
 for (const p of PROFILS) {
   const corps = fs.readFileSync(path.join(__dirname, 'out', p.src), 'utf8');

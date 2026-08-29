@@ -56,7 +56,7 @@ const PROFILS = {
   },
 };
 
-function signature(p, local) {
+function outils(local) {
   const url = (f) => href(local ? `./${f}` : `${NOUVEAUX.has(f) ? BASE_NOUVEAU : BASE_ICONES}/${f}`);
   const lien = (u, texte, extra = '') =>
     `<a href="${href(u)}" style="color:${TEXTE};text-decoration:none;${extra}">${texte}</a>`;
@@ -71,6 +71,12 @@ function signature(p, local) {
               ${contenu}
             </td>
           </tr>`;
+
+  return { url, lien, ligne };
+}
+
+function signature(p, local) {
+  const { url, lien, ligne } = outils(local);
 
   const sousTitre = p.sousTitre ? `
       <div style="padding:0 0 10px 0;font-family:${SANS};font-size:10px;letter-spacing:1.6px;text-transform:uppercase;color:${OR};">
@@ -133,6 +139,51 @@ function signature(p, local) {
 </table>`;
 }
 
+// --- Signature personnelle -------------------------------------------------------
+// Même grammaire graphique que les signatures du cabinet, mais sans le bloc-marque :
+// celui-ci porte l'identité médicale, qui n'a rien à faire sur du courrier privé.
+// Ce qui fait le lien, c'est le vert, l'or, le Georgia, le filet pointillé et les
+// mêmes pictogrammes.
+const PERSO = {
+  fichier: 'signature-personnelle',
+  prenoms: ['Carina Passant', 'Nicolas Bergeon'],
+  adresse: '22 rue du Pradet, 23000 Guéret',
+  adresseAff: '22 rue du Pradet &mdash; 23000 Gu&eacute;ret',
+  telAff: '06 95 15 86 96',
+  telHref: 'tel:+33695158696',
+  email: null, // ajouter l'adresse mail ici pour qu'une ligne courriel apparaisse
+};
+
+function signaturePersonnelle(local) {
+  const { lien, ligne } = outils(local);
+  const p = PERSO;
+
+  const courriel = p.email
+    ? ligne('mail.png', 16, 11, 'Courriel', lien('mailto:' + p.email, p.email))
+    : '';
+
+  return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" width="330" style="border-collapse:collapse;background:#ffffff;width:330px;">
+  <tr>
+    <td style="padding:0 0 9px 0;font-family:${SERIF};font-size:16px;font-weight:bold;color:${VERT};letter-spacing:.2px;">
+      ${p.prenoms[0]}<span style="color:${OR};font-weight:normal;padding:0 5px;">&amp;</span>${p.prenoms[1]}
+    </td>
+  </tr>
+  <tr>
+    <td style="padding:0;border-top:1px dashed ${OR};font-size:0;line-height:0;">&nbsp;</td>
+  </tr>
+  <tr>
+    <td style="padding:9px 0 0 0;">
+      <table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;">${
+        ligne('adresse.png', 11, 15, 'Adresse', lien(maps(p.adresse), p.adresseAff))
+      }${
+        ligne('telephone.png', 15, 15, 'T&eacute;l&eacute;phone', lien(p.telHref, p.telAff, 'font-weight:bold;'))
+      }${courriel}
+      </table>
+    </td>
+  </tr>
+</table>`;
+}
+
 function page(titre, corps) {
   return `<!doctype html><html lang="fr"><head><meta charset="utf-8">
 <title>${titre}</title></head>
@@ -152,11 +203,18 @@ for (const key of Object.keys(PROFILS)) {
   fs.writeFileSync(path.join(OUT, `preview-${p.fichier}.html`), page(p.fichier, signature(p, true)));
 }
 
+fs.writeFileSync(path.join(OUT, `${PERSO.fichier}.html`), signaturePersonnelle(false) + '\n');
+fs.writeFileSync(
+  path.join(OUT, `preview-${PERSO.fichier}.html`),
+  page(PERSO.fichier, signaturePersonnelle(true))
+);
+
 fs.writeFileSync(
   path.join(OUT, 'preview-les-deux.html'),
   page('Signatures Dr Bergeon',
     Object.values(PROFILS)
       .map((p) => `<div style="margin-bottom:48px;">${signature(p, true)}</div>`)
+      .concat(`<div style="margin-bottom:48px;">${signaturePersonnelle(true)}</div>`)
       .join('\n'))
 );
 

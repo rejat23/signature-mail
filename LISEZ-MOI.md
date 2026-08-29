@@ -10,11 +10,13 @@ médiathèque WordPress de `dr-bergeon.fr`.
 |---|---|
 | `out/signature-contact.html` | signature de **contact@dr-bergeon.fr** (à coller) |
 | `out/signature-secretariat.html` | signature de **secretariat@dr-bergeon.fr** (à coller) |
+| `out/signature-personnelle.html` | signature **personnelle** de Carina et Nicolas (à coller) |
 | `out/preview-*.html` | aperçus ouvrables au navigateur (images locales) |
 | `out/logo-signature.gif` | bloc-marque animé ré-encodé, 412×297 px (affiché 200×144), 92 Ko |
 | `out/logo-signature.png` | même image figée, pour une signature sans animation |
 | `out/facebook.png` | icône Facebook, ajoutée pour compléter le jeu existant |
-| `build-logo.js`, `build-icon-facebook.js`, `build-signature.js` | scripts de regénération |
+| `out/signatures-outlook-classique/` | fichiers prêts à copier pour l'Outlook classique |
+| `build-*.js` | scripts de regénération |
 
 ## Ce que contient la signature
 
@@ -56,6 +58,16 @@ Ne plus déplacer ni renommer ces fichiers ensuite : les mails déjà envoyés p
 > message d'un correspondant. Le texte, les liens et le bouton Doctolib restent
 > lisibles ; le bloc-marque et les pictogrammes attendent un clic sur « afficher les
 > images ». C'est le comportement de toute signature illustrée.
+
+## La signature personnelle
+
+Même grammaire graphique que celles du cabinet — vert, or, Georgia, filet pointillé,
+mêmes pictogrammes — mais **sans le bloc-marque** : celui-ci porte l'identité médicale
+du cabinet, qui n'a rien à faire sur du courrier privé.
+
+Elle ne comporte volontairement ni bouton Doctolib, ni réseaux sociaux, ni mention de
+confidentialité. Pour lui ajouter une ligne courriel, renseigner `email` dans l'objet
+`PERSO` en tête de `build-signature.js` et regénérer.
 
 ## L'icône Facebook
 
