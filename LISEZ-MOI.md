@@ -16,6 +16,7 @@ médiathèque WordPress de `dr-bergeon.fr`.
 | `out/logo-signature.png` | même image figée, pour une signature sans animation |
 | `out/facebook.png` | icône Facebook, ajoutée pour compléter le jeu existant |
 | `out/signatures-outlook-classique/` | fichiers prêts à copier pour l'Outlook classique |
+| `out/signatures-a-envoyer.eml` | message à s'envoyer pour transporter les signatures |
 | `build-*.js` | scripts de regénération |
 
 ## Ce que contient la signature
@@ -177,6 +178,29 @@ fichier » et pointer sur `signature-contact.html`.
 
 ## Plusieurs postes
 
+### Le message de transport
+
+`build-mail.js` fabrique `out/signatures-a-envoyer.eml` : un message contenant les deux
+signatures du cabinet, à s'envoyer une fois à soi-même. On le retrouve ensuite dans sa
+boîte depuis n'importe quel poste.
+
+Double-cliquer le fichier — il s'ouvre dans Outlook — puis **Transférer** vers sa propre
+adresse et envoyer. Le destinataire par défaut se change ainsi :
+
+```bash
+MAIL_TO=nicolas@exemple.fr node build-mail.js
+```
+
+Le message porte les signatures de deux façons : **en pièces jointes**, à ouvrir au
+navigateur pour un `Ctrl+A` / `Ctrl+C` sans bavure — c'est la voie sûre ; et **dans le
+corps**, pour une copie immédiate, à condition d'avoir affiché les images au préalable,
+faute de quoi la copie les emporte vides.
+
+`signatures-a-envoyer.html` est le même corps en page autonome, si l'on préfère le coller
+soi-même dans un nouveau message plutôt que de passer par le `.eml`. Les pièces jointes
+sont alors perdues.
+
+
 Les **signatures itinérantes** de Microsoft rangent la signature dans la boîte aux
 lettres, d'où elle suit l'utilisateur de poste en poste. Elles sont réservées aux boîtes
 **Exchange Online / Outlook.com** : un compte IMAP tiers, donc Infomaniak, en est exclu,
@@ -199,7 +223,7 @@ messages HTML, un `.txt` pour ceux en texte brut.
 
 ```bash
 npm install
-node build-logo.js && node build-icon-facebook.js && node build-signature.js && node build-outlook-classique.js
+node build-logo.js && node build-icon-facebook.js && node build-signature.js && node build-outlook-classique.js && node build-mail.js
 ```
 
 Sources : `assets/logo-anime-source.gif` (copie de `Gif.gif` de la médiathèque),
